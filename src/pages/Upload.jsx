@@ -1,16 +1,15 @@
 import { useState, useRef, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
+import STLViewer from '../components/STLViewer'
 import './Upload.css'
 
-// Screens within the upload flow
 const SCREEN = {
   UPLOAD: 'upload',
   ANALYZING: 'analyzing',
   RESULTS: 'results',
 }
 
-// Mock structural score + feedback for Phase 1 UI demo
+// Mock result — replaced by real backend in Phase 4+
 const MOCK_RESULT = {
   score: 0.85,
   feedback: `This model demonstrates strong overall structural integrity with a watertight mesh, consistent normals, and well-distributed geometry. Minor issues such as slight variations in triangle density and a few thin regions prevent a perfect score, but the object is stable and suitable for most applications, including visualization and 3D printing with minimal adjustments.`,
@@ -18,29 +17,22 @@ const MOCK_RESULT = {
 
 export default function Upload() {
   const [screen, setScreen] = useState(SCREEN.UPLOAD)
-  const [fileName, setFileName] = useState(null)
+  const [file, setFile] = useState(null)
   const [isDragging, setIsDragging] = useState(false)
   const fileInputRef = useRef(null)
-  const navigate = useNavigate()
 
-  function handleFile(file) {
-    if (!file) return
-    if (!file.name.toLowerCase().endsWith('.stl')) {
+  function handleFile(f) {
+    if (!f) return
+    if (!f.name.toLowerCase().endsWith('.stl')) {
       alert('Please upload an .stl file.')
       return
     }
-    setFileName(file.name)
+    setFile(f)
     setScreen(SCREEN.ANALYZING)
-
-    // Simulate analysis delay
-    setTimeout(() => {
-      setScreen(SCREEN.RESULTS)
-    }, 2500)
+    setTimeout(() => setScreen(SCREEN.RESULTS), 2500)
   }
 
-  function handleInputChange(e) {
-    handleFile(e.target.files[0])
-  }
+  function handleInputChange(e) { handleFile(e.target.files[0]) }
 
   const handleDrop = useCallback((e) => {
     e.preventDefault()
@@ -53,13 +45,11 @@ export default function Upload() {
     setIsDragging(true)
   }, [])
 
-  const handleDragLeave = useCallback(() => {
-    setIsDragging(false)
-  }, [])
+  const handleDragLeave = useCallback(() => setIsDragging(false), [])
 
   function handleNewFile() {
     setScreen(SCREEN.UPLOAD)
-    setFileName(null)
+    setFile(null)
     if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
@@ -69,6 +59,7 @@ export default function Upload() {
     score >= 0.4 ? 'var(--score-yellow)' :
     'var(--score-red)'
 
+  // ── Analyzing ────────────────────────────────────────────────────────────
   if (screen === SCREEN.ANALYZING) {
     return (
       <div className="upload-page">
@@ -83,12 +74,12 @@ export default function Upload() {
     )
   }
 
+  // ── Results ───────────────────────────────────────────────────────────────
   if (screen === SCREEN.RESULTS) {
     return (
       <div className="upload-page">
         <Navbar />
         <div className="results-layout">
-          {/* Left Sidebar */}
           <aside className="results-sidebar">
             <div className="results-sidebar-header">File Viewer</div>
             <div className="results-sidebar-body">
@@ -98,9 +89,7 @@ export default function Upload() {
               </div>
               <p className="results-score">
                 Structural Score:{' '}
-                <span style={{ color: scoreColor }}>
-                  {score.toFixed(2)}
-                </span>
+                <span style={{ color: scoreColor }}>{score.toFixed(2)}</span>
                 <span className="results-score-denom">/1</span>
               </p>
             </div>
@@ -116,36 +105,22 @@ export default function Upload() {
             </button>
           </aside>
 
-          {/* 3D Viewer Area */}
           <main className="results-viewer">
             <div className="results-viewer-dots" />
-            <div className="results-360-btn">
-              <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <div className="results-360-hint">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
               </svg>
               <span>360°</span>
             </div>
-
-            {/* Placeholder 3D cube — replaced by Three.js in Phase 3 */}
-            <div className="results-model-placeholder">
-              <div className="cube-wrap">
-                <div className="cube">
-                  <div className="cube-face cube-front" />
-                  <div className="cube-face cube-back" />
-                  <div className="cube-face cube-left" />
-                  <div className="cube-face cube-right" />
-                  <div className="cube-face cube-top" />
-                  <div className="cube-face cube-bottom" />
-                </div>
-              </div>
-            </div>
+            <STLViewer file={file} />
           </main>
         </div>
       </div>
     )
   }
 
-  // SCREEN.UPLOAD
+  // ── Upload ────────────────────────────────────────────────────────────────
   return (
     <div className="upload-page">
       <Navbar />

@@ -1,0 +1,33 @@
+.stl-viewer {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+/* canvas injected by Three.js fills the container */
+.stl-viewer canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.stl-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  pointer-events: none;
+}
+
+.stl-overlay-text {
+  font-size: 16px;
+  color: var(--text-secondary);
+}
+
+.stl-overlay-error {
+  font-size: 15px;
+  color: var(--score-red);
+}

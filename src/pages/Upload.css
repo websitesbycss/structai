@@ -89,8 +89,8 @@
 }
 
 .results-sidebar {
-  width: 220px;
-  min-width: 220px;
+  width: 310px;
+  min-width: 310px;
   display: flex;
   flex-direction: column;
   background: var(--bg-surface);
@@ -118,7 +118,7 @@
   background: var(--bg-elevated);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 14px 14px;
+  padding: 14px;
 }
 
 .results-feedback-title {
@@ -176,21 +176,20 @@
   position: relative;
   background: var(--bg);
   overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
-/* Dot-grid background */
+/* Dot-grid sits behind the transparent Three.js canvas */
 .results-viewer-dots {
   position: absolute;
   inset: 0;
   background-image: radial-gradient(circle, #2a2a2a 1px, transparent 1px);
   background-size: 28px 28px;
   pointer-events: none;
+  z-index: 0;
 }
 
-.results-360-btn {
+/* 360° hint badge */
+.results-360-hint {
   position: absolute;
   top: 20px;
   right: 20px;
@@ -198,61 +197,16 @@
   flex-direction: column;
   align-items: center;
   gap: 2px;
-  background: rgba(20, 20, 20, 0.8);
+  background: rgba(20, 20, 20, 0.75);
   border: 1px solid var(--border);
   border-radius: 50%;
-  width: 72px;
-  height: 72px;
+  width: 68px;
+  height: 68px;
   justify-content: center;
-  color: var(--text-primary);
+  color: var(--text-secondary);
   font-size: 11px;
   font-weight: 600;
-  cursor: pointer;
   backdrop-filter: blur(8px);
+  pointer-events: none;
   z-index: 2;
 }
-
-.results-360-btn:hover {
-  border-color: var(--accent);
-}
-
-/* ── CSS 3D cube placeholder ── */
-.results-model-placeholder {
-  position: relative;
-  z-index: 1;
-  perspective: 600px;
-}
-
-.cube-wrap {
-  width: 160px;
-  height: 160px;
-  perspective: 600px;
-  animation: cubeRotate 8s linear infinite;
-}
-
-@keyframes cubeRotate {
-  from { transform: rotateX(-20deg) rotateY(0deg); }
-  to   { transform: rotateX(-20deg) rotateY(360deg); }
-}
-
-.cube {
-  width: 160px;
-  height: 160px;
-  position: relative;
-  transform-style: preserve-3d;
-}
-
-.cube-face {
-  position: absolute;
-  width: 160px;
-  height: 160px;
-  background: rgba(220, 220, 220, 0.92);
-  border: 1px solid rgba(255,255,255,0.3);
-}
-
-.cube-front  { transform: translateZ(80px); }
-.cube-back   { transform: rotateY(180deg) translateZ(80px); }
-.cube-left   { transform: rotateY(-90deg) translateZ(80px); background: rgba(180,180,180,0.85); }
-.cube-right  { transform: rotateY(90deg)  translateZ(80px); background: rgba(200,200,200,0.9); }
-.cube-top    { transform: rotateX(90deg)  translateZ(80px); background: rgba(240,240,240,0.95); }
-.cube-bottom { transform: rotateX(-90deg) translateZ(80px); background: rgba(160,160,160,0.8); }
