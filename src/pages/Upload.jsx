@@ -213,12 +213,25 @@ function MeshStats({ result }) {
         <StatRow label="Euler #" value={result.euler_number} />
       </div>
 
-      <div className="stats-score-placeholder">
-        <p className="stats-score-label">Structural Score</p>
-        <p className="stats-score-value">—</p>
-        <p className="stats-score-hint">ML model coming soon</p>
-      </div>
+      <ScoreDisplay score={result.score} />
     </>
+  )
+}
+
+function ScoreDisplay({ score }) {
+  const color =
+    score >= 0.7 ? 'var(--score-green)' :
+    score >= 0.4 ? 'var(--score-yellow)' :
+    'var(--score-red)'
+
+  return (
+    <div className="stats-score-box">
+      <p className="stats-score-label">Structural Score</p>
+      <p className="stats-score-value" style={{ color }}>
+        {score.toFixed(2)}
+        <span className="stats-score-denom">/1</span>
+      </p>
+    </div>
   )
 }
 
