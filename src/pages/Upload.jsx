@@ -9,27 +9,49 @@ const SCREEN = {
   RESULTS: 'results',
 }
 
-// Mock result — replaced by real backend in Phase 4+
-const MOCK_RESULT = {
-  score: 0.85,
-  feedback: `This model demonstrates strong overall structural integrity with a watertight mesh, consistent normals, and well-distributed geometry. Minor issues such as slight variations in triangle density and a few thin regions prevent a perfect score, but the object is stable and suitable for most applications, including visualization and 3D printing with minimal adjustments.`,
-}
+const API_URL = import.meta.env.VITE_API_URL
 
 export default function Upload() {
   const [screen, setScreen] = useState(SCREEN.UPLOAD)
   const [file, setFile] = useState(null)
   const [isDragging, setIsDragging] = useState(false)
+  const [result, setResult] = useState(null)
+  const [apiError, setApiError] = useState(null)
   const fileInputRef = useRef(null)
 
-  function handleFile(f) {
+  async function handleFile(f) {
     if (!f) return
     if (!f.name.toLowerCase().endsWith('.stl')) {
       alert('Please upload an .stl file.')
       return
     }
+
     setFile(f)
+    setResult(null)
+    setApiError(null)
     setScreen(SCREEN.ANALYZING)
-    setTimeout(() => setScreen(SCREEN.RESULTS), 2500)
+
+    try {
+      const formData = new FormData()
+      formData.append('file', f)
+
+      const res = await fetch(`${API_URL}/analyze`, {
+        method: 'POST',
+        body: formData,
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        setApiError(data.error ?? 'Analysis failed.')
+      } else {
+        setResult(data)
+      }
+    } catch (err) {
+      setApiError('Could not reach the analysis server.')
+    }
+
+    setScreen(SCREEN.RESULTS)
   }
 
   function handleInputChange(e) { handleFile(e.target.files[0]) }
@@ -50,16 +72,12 @@ export default function Upload() {
   function handleNewFile() {
     setScreen(SCREEN.UPLOAD)
     setFile(null)
+    setResult(null)
+    setApiError(null)
     if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
-  const score = MOCK_RESULT.score
-  const scoreColor =
-    score >= 0.7 ? 'var(--score-green)' :
-    score >= 0.4 ? 'var(--score-yellow)' :
-    'var(--score-red)'
-
-  // ── Analyzing ────────────────────────────────────────────────────────────
+  // ── Analyzing ─────────────────────────────────────────────────────────────
   if (screen === SCREEN.ANALYZING) {
     return (
       <div className="upload-page">
@@ -83,15 +101,14 @@ export default function Upload() {
           <aside className="results-sidebar">
             <div className="results-sidebar-header">File Viewer</div>
             <div className="results-sidebar-body">
-              <div className="results-feedback-card">
-                <h3 className="results-feedback-title">Feedback</h3>
-                <p className="results-feedback-text">{MOCK_RESULT.feedback}</p>
-              </div>
-              <p className="results-score">
-                Structural Score:{' '}
-                <span style={{ color: scoreColor }}>{score.toFixed(2)}</span>
-                <span className="results-score-denom">/1</span>
-              </p>
+              {apiError ? (
+                <div className="results-error">
+                  <p className="results-error-title">Analysis failed</p>
+                  <p className="results-error-msg">{apiError}</p>
+                </div>
+              ) : result ? (
+                <MeshStats result={result} />
+              ) : null}
             </div>
             <button className="results-new-file" onClick={handleNewFile}>
               <span className="results-new-file-icon">
@@ -150,6 +167,68 @@ export default function Upload() {
           <p className="upload-hint">.stl files only</p>
         </button>
       </div>
+    </div>
+  )
+}
+
+// ── Mesh stats sidebar ─────────────────────────────────────────────────────
+function MeshStats({ result }) {
+  const bb = result.bounding_box
+
+  return (
+    <>
+      <div className="stats-section">
+        <p className="stats-section-title">Mesh</p>
+        <StatRow label="Triangles"  value={result.triangle_count.toLocaleString()} />
+        <StatRow label="Vertices"   value={result.vertex_count.toLocaleString()} />
+        <StatRow label="Surface area" value={`${result.surface_area.toLocaleString()} mm²`} />
+        {result.volume != null && (
+          <StatRow label="Volume" value={`${result.volume.toLocaleString()} mm³`} />
+        )}
+        <StatRow label="Avg edge" value={`${result.avg_edge_length} mm`} />
+      </div>
+
+      <div className="stats-section">
+        <p className="stats-section-title">Bounding Box</p>
+        <StatRow label="X" value={`${bb.x} mm`} />
+        <StatRow label="Y" value={`${bb.y} mm`} />
+        <StatRow label="Z" value={`${bb.z} mm`} />
+        {result.aspect_ratio != null && (
+          <StatRow label="Aspect ratio" value={`${result.aspect_ratio}:1`} />
+        )}
+      </div>
+
+      <div className="stats-section">
+        <p className="stats-section-title">Integrity</p>
+        <StatRow
+          label="Watertight"
+          value={result.is_watertight ? 'Yes' : 'No'}
+          valueColor={result.is_watertight ? 'var(--score-green)' : 'var(--score-red)'}
+        />
+        <StatRow
+          label="Normals"
+          value={result.is_winding_consistent ? 'Consistent' : 'Inconsistent'}
+          valueColor={result.is_winding_consistent ? 'var(--score-green)' : 'var(--score-yellow)'}
+        />
+        <StatRow label="Euler #" value={result.euler_number} />
+      </div>
+
+      <div className="stats-score-placeholder">
+        <p className="stats-score-label">Structural Score</p>
+        <p className="stats-score-value">—</p>
+        <p className="stats-score-hint">ML model coming soon</p>
+      </div>
+    </>
+  )
+}
+
+function StatRow({ label, value, valueColor }) {
+  return (
+    <div className="stat-row">
+      <span className="stat-label">{label}</span>
+      <span className="stat-value" style={valueColor ? { color: valueColor } : {}}>
+        {value}
+      </span>
     </div>
   )
 }
