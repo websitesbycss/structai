@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# Local dev scripts (machine-specific paths)
+start-api.bat
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

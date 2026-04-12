@@ -2,7 +2,15 @@
   "permissions": {
     "allow": [
       "Bash(npm run:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(py --version)",
+      "Bash(where python:*)",
+      "Read(//c/Users/shepj/AppData/Local/Programs/Python/**)",
+      "Read(//c//**)",
+      "Read(//c/Users/shepj/AppData/Local/Microsoft/WindowsApps/**)",
+      "Bash(\"C:/Users/shepj/AppData/Local/Programs/Python/Python312/python.exe\" -m pip install -r \"c:\\\\Coding Projects\\\\StructAI\\\\python-service\\\\requirements.txt\")",
+      "Bash(\"C:/Users/shepj/AppData/Local/Programs/Python/Python312/python.exe\" app.py)",
+      "Bash(curl -s http://localhost:5000/health)"
     ]
   }
 }
