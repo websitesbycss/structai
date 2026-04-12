@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" fill="none">
+  <!-- Back face -->
+  <polygon points="20,4 36,12 36,28 20,36 4,28 4,12" fill="#1a1a2e" stroke="#22d3ee" stroke-width="1"/>
+  <!-- Top face -->
+  <polygon points="20,4 36,12 20,20 4,12" fill="#22d3ee" opacity="0.25"/>
+  <!-- Left face -->
+  <polygon points="4,12 20,20 20,36 4,28" fill="#ef4444" opacity="0.55"/>
+  <!-- Right face -->
+  <polygon points="36,12 20,20 20,36 36,28" fill="#22d3ee" opacity="0.55"/>
+  <!-- Triangle accent -->
+  <polygon points="20,11 27,22 13,22" fill="none" stroke="#ef4444" stroke-width="1.5"/>
+</svg>
