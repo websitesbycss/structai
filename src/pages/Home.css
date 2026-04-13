@@ -10,19 +10,20 @@
   align-items: center;
   justify-content: center;
   text-align: center;
+  background-color: #0d1117;
+  min-height: calc(100vh - 64px);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Image rendered as a div so Vite processes the asset — opacity applied here */
+.home-hero-bg {
+  position: absolute;
+  inset: 0;
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  background-color: var(--bg);
-  min-height: calc(100vh - 64px);
-  position: relative;
-}
-
-.home-hero::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(ellipse at center, rgba(10,10,10,0.3) 0%, rgba(10,10,10,0.7) 100%);
+  opacity: 0.29;
   pointer-events: none;
 }
 
@@ -34,12 +35,11 @@
 
 .home-headline {
   font-size: clamp(40px, 7vw, 80px);
-  font-weight: 900;
+  font-weight: 700;
   line-height: 1.05;
-  letter-spacing: -2px;
+  letter-spacing: -1px;
   color: var(--text-primary);
   margin-bottom: 24px;
-  text-shadow: 0 2px 20px rgba(0,0,0,0.5);
 }
 
 .home-sub {
@@ -66,5 +66,5 @@
 
 .home-cta:hover {
   background: var(--text-primary);
-  color: var(--bg);
+  color: #0d1117;
 }

@@ -31,6 +31,9 @@ export default function Upload() {
     setApiError(null)
     setScreen(SCREEN.ANALYZING)
 
+    const MIN_DISPLAY_MS = 1500
+    const start = Date.now()
+
     try {
       const formData = new FormData()
       formData.append('file', f)
@@ -49,6 +52,11 @@ export default function Upload() {
       }
     } catch (err) {
       setApiError('Could not reach the analysis server.')
+    }
+
+    const elapsed = Date.now() - start
+    if (elapsed < MIN_DISPLAY_MS) {
+      await new Promise(r => setTimeout(r, MIN_DISPLAY_MS - elapsed))
     }
 
     setScreen(SCREEN.RESULTS)
@@ -177,29 +185,35 @@ function MeshStats({ result }) {
 
   return (
     <>
-      <div className="stats-section">
-        <p className="stats-section-title">Mesh</p>
-        <StatRow label="Triangles"  value={result.triangle_count.toLocaleString()} />
-        <StatRow label="Vertices"   value={result.vertex_count.toLocaleString()} />
+      {result.feedback && (
+        <div className="results-feedback-card">
+          <h3 className="results-feedback-title">Feedback</h3>
+          <p className="results-feedback-text">{result.feedback}</p>
+        </div>
+      )}
+
+      <ScoreDisplay score={result.score} />
+
+      <CollapsibleSection title="Mesh">
+        <StatRow label="Triangles"    value={result.triangle_count.toLocaleString()} />
+        <StatRow label="Vertices"     value={result.vertex_count.toLocaleString()} />
         <StatRow label="Surface area" value={`${result.surface_area.toLocaleString()} mm²`} />
         {result.volume != null && (
           <StatRow label="Volume" value={`${result.volume.toLocaleString()} mm³`} />
         )}
         <StatRow label="Avg edge" value={`${result.avg_edge_length} mm`} />
-      </div>
+      </CollapsibleSection>
 
-      <div className="stats-section">
-        <p className="stats-section-title">Bounding Box</p>
+      <CollapsibleSection title="Bounding Box">
         <StatRow label="X" value={`${bb.x} mm`} />
         <StatRow label="Y" value={`${bb.y} mm`} />
         <StatRow label="Z" value={`${bb.z} mm`} />
         {result.aspect_ratio != null && (
           <StatRow label="Aspect ratio" value={`${result.aspect_ratio}:1`} />
         )}
-      </div>
+      </CollapsibleSection>
 
-      <div className="stats-section">
-        <p className="stats-section-title">Integrity</p>
+      <CollapsibleSection title="Integrity">
         <StatRow
           label="Watertight"
           value={result.is_watertight ? 'Yes' : 'No'}
@@ -211,10 +225,29 @@ function MeshStats({ result }) {
           valueColor={result.is_winding_consistent ? 'var(--score-green)' : 'var(--score-yellow)'}
         />
         <StatRow label="Euler #" value={result.euler_number} />
-      </div>
-
-      <ScoreDisplay score={result.score} />
+      </CollapsibleSection>
     </>
+  )
+}
+
+function CollapsibleSection({ title, children }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="stats-section">
+      <button className="stats-section-header" onClick={() => setOpen(o => !o)}>
+        <svg
+          className={`stats-chevron ${open ? 'stats-chevron--open' : ''}`}
+          xmlns="http://www.w3.org/2000/svg"
+          width="12" height="12" viewBox="0 0 24 24"
+          fill="none" stroke="currentColor" strokeWidth="2.5"
+          strokeLinecap="round" strokeLinejoin="round"
+        >
+          <polyline points="9 18 15 12 9 6" />
+        </svg>
+        {title}
+      </button>
+      {open && <div className="stats-section-body">{children}</div>}
+    </div>
   )
 }
 

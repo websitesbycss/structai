@@ -19,10 +19,11 @@ export default function Home() {
   return (
     <div className="home">
       <Navbar />
-      <section
-        className="home-hero"
-        style={{ backgroundImage: `url(${heroBg})` }}
-      >
+      <section className="home-hero">
+        <div
+          className="home-hero-bg"
+          style={{ backgroundImage: `url(${heroBg})` }}
+        />
         <div className="home-hero-content">
           <h1 className="home-headline">
             Analyze Your<br />Models in Seconds
