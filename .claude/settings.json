@@ -1,7 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Bash(\"C:/Users/shepj/AppData/Local/Programs/Python/Python312/python.exe\" -m pip install openai python-dotenv)"
+      "Bash(\"C:/Users/shepj/AppData/Local/Programs/Python/Python312/python.exe\" -m pip install openai python-dotenv)",
+      "Bash(curl -s https://structai-production.up.railway.app/health)",
+      "Bash(\"C:/Users/shepj/AppData/Local/Programs/Python/Python312/python.exe\" -m pip show flask flask-cors trimesh numpy scikit-learn pandas joblib openai python-dotenv)"
     ]
   }
 }
