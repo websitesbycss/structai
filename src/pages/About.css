@@ -34,12 +34,13 @@
 .about-accent {
   color: var(--accent);
   font-weight: 600;
+  font-family: var(--font-mono);
 }
 
 .about-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
-  gap: 20px;
+  gap: 16px;
   margin-bottom: 52px;
 }
 
@@ -48,11 +49,25 @@
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 28px;
+  transition: border-color var(--transition-base);
 }
 
+.about-card:hover {
+  border-color: var(--border-hover);
+}
+
+/* SVG icon container — replaces emoji */
 .about-card-icon {
-  font-size: 28px;
-  margin-bottom: 14px;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: var(--accent-dim);
+  border: 1px solid var(--accent-glow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
+  margin-bottom: 16px;
 }
 
 .about-card h3 {
@@ -64,14 +79,16 @@
 
 .about-card p {
   font-size: 14px;
-  line-height: 1.7;
+  line-height: 1.75;
   color: var(--text-secondary);
 }
 
 .about-card strong {
   color: var(--text-primary);
+  font-weight: 700;
 }
 
+/* Score legend */
 .about-score-legend {
   background: var(--bg-surface);
   border: 1px solid var(--border);
@@ -80,10 +97,11 @@
 }
 
 .about-legend-title {
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 700;
   color: var(--text-primary);
   margin-bottom: 18px;
+  letter-spacing: -0.2px;
 }
 
 .about-legend-items {
@@ -98,11 +116,12 @@
   gap: 12px;
   font-size: 14px;
   color: var(--text-secondary);
+  line-height: 1.5;
 }
 
 .about-legend-dot {
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   flex-shrink: 0;
 }

@@ -3,7 +3,12 @@
     "allow": [
       "Bash(\"C:/Users/shepj/AppData/Local/Programs/Python/Python312/python.exe\" -m pip install openai python-dotenv)",
       "Bash(curl -s https://structai-production.up.railway.app/health)",
-      "Bash(\"C:/Users/shepj/AppData/Local/Programs/Python/Python312/python.exe\" -m pip show flask flask-cors trimesh numpy scikit-learn pandas joblib openai python-dotenv)"
+      "Bash(\"C:/Users/shepj/AppData/Local/Programs/Python/Python312/python.exe\" -m pip show flask flask-cors trimesh numpy scikit-learn pandas joblib openai python-dotenv)",
+      "Bash(npx vite:*)",
+      "Bash(python skills/ui-ux-pro-max/scripts/search.py \"engineering SaaS dashboard 3D visualization technical professional dark mode\" --design-system -p \"StructAI\" -f markdown)",
+      "Bash(python .claude/skills/ui-ux-pro-max/scripts/search.py \"engineering SaaS dashboard 3D visualization technical professional dark mode\" --design-system -p \"StructAI\" -f markdown)",
+      "Bash(python .claude/skills/ui-ux-pro-max/scripts/search.py \"animation loading states micro-interactions\" --domain ux)",
+      "Bash(python .claude/skills/ui-ux-pro-max/scripts/search.py \"gauge chart score data visualization dashboard\" --domain chart)"
     ]
   }
 }

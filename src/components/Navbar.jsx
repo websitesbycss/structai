@@ -1,4 +1,4 @@
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useState, useRef, useEffect } from 'react'
 import { useUser, useClerk } from '@clerk/clerk-react'
 import logo from '../assets/logo.svg'
@@ -8,6 +8,7 @@ export default function Navbar() {
   const { user, isSignedIn, isLoaded } = useUser()
   const { signOut } = useClerk()
   const navigate = useNavigate()
+  const location = useLocation()
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const dropdownRef = useRef(null)
 
@@ -26,6 +27,15 @@ export default function Navbar() {
       navigate('/upload')
     } else {
       navigate('/auth')
+    }
+  }
+
+  function handleAboutClick(e) {
+    e.preventDefault()
+    if (location.pathname === '/') {
+      document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' })
+    } else {
+      navigate('/#about')
     }
   }
 
@@ -56,7 +66,7 @@ export default function Navbar() {
 
       <div className="navbar-links">
         <button className="navbar-link" onClick={handleUploadClick}>Upload</button>
-        <Link to="/about" className="navbar-link">About</Link>
+        <a href="#about" className="navbar-link" onClick={handleAboutClick}>About</a>
 
         {isLoaded && isSignedIn ? (
           <div className="navbar-avatar-wrap" ref={dropdownRef}>
