@@ -127,6 +127,72 @@ python generate_dataset.py   # regenerate training data
 python train_model.py        # retrain and save model.joblib
 ```
 
+## Scoring Algorithm
+
+The integrity score is a continuous value from **0.0** (structurally weak) to **1.0** (excellent). Scores are produced by a `GradientBoostingRegressor` trained to approximate the following deterministic engineering formula, which was used to label the synthetic training dataset.
+
+### Formula
+
+```
+score = 0.25 (baseline)
+      + watertight bonus       (up to +0.25)
+      + normal consistency     (+0.05)
+      + topology bonus         (+0.05)
+      + sphericity reward      (up to +0.40)
+      − aspect ratio penalty   (up to −0.25)
+      + noise                  (σ = 0.015, training only)
+```
+
+### Component Breakdown
+
+**Baseline — `+0.25`**
+Every mesh starts here regardless of quality.
+
+**Watertight — `+0.25`**
+A watertight mesh has no holes, gaps, or open edges — every edge is shared by exactly two faces. This is the single largest factor. A non-watertight mesh (open shell, missing faces) receives no bonus and also disqualifies the sphericity reward.
+
+**Consistent normals — `+0.05`**
+All face normals must wind in a consistent direction (all outward or all inward). Inconsistent winding indicates inverted faces, which causes rendering and manufacturing defects.
+
+**Euler number == 2 — `+0.05`**
+The Euler characteristic `V − E + F = 2` holds for any topologically valid closed surface (genus 0, like a sphere or a box). Tori score 0 here (Euler = 0) due to their hole. Corrupted or degenerate meshes often produce unexpected Euler numbers.
+
+**Sphericity — `up to +0.40`**
+Sphericity measures how close a shape's surface-to-volume ratio is to that of a perfect sphere:
+
+```
+sphericity = (π^(1/3) × (6V)^(2/3)) / A
+```
+
+Where `V` is volume and `A` is surface area. A perfect sphere scores 1.0, earning the full `+0.40`. Flat slabs, thin rods, and hollow shells approach 0. Only applied when the mesh is watertight (volume is meaningful).
+
+**Aspect ratio penalty — `up to −0.25`**
+Computed as `max_extent / min_extent` across the bounding box axes. A perfect cube has aspect ratio 1 (no penalty). The penalty scales as:
+
+```
+penalty = min(0.25, (aspect_ratio − 1) × 0.025)
+```
+
+This reaches its cap of `−0.25` at an aspect ratio of 11 (e.g. a rod 11× longer than it is wide).
+
+### Maximum Possible Score
+
+A perfect sphere achieves the theoretical maximum:
+
+| Component | Value |
+|---|---|
+| Baseline | +0.25 |
+| Watertight | +0.25 |
+| Consistent normals | +0.05 |
+| Euler number == 2 | +0.05 |
+| Sphericity (= 1.0) | +0.40 |
+| Aspect ratio (= 1.0) | −0.00 |
+| **Total** | **1.00** |
+
+### What the ML Model Adds
+
+The `GradientBoostingRegressor` (300 estimators, learning rate 0.05, max depth 4) is trained on ~700 synthetic meshes covering boxes, cylinders, spheres, cones, tori, capsules, and corrupted variants. Rather than applying the formula directly at inference time, the model learns non-linear interactions between features — for example, how SA/V ratio and aspect ratio together predict structural weakness in ways the formula alone doesn't fully capture. The final score is clipped to `[0.0, 1.0]`.
+
 ## Score Guide
 
 | Range | Label |
