@@ -8,7 +8,8 @@
       "Bash(python skills/ui-ux-pro-max/scripts/search.py \"engineering SaaS dashboard 3D visualization technical professional dark mode\" --design-system -p \"StructAI\" -f markdown)",
       "Bash(python .claude/skills/ui-ux-pro-max/scripts/search.py \"engineering SaaS dashboard 3D visualization technical professional dark mode\" --design-system -p \"StructAI\" -f markdown)",
       "Bash(python .claude/skills/ui-ux-pro-max/scripts/search.py \"animation loading states micro-interactions\" --domain ux)",
-      "Bash(python .claude/skills/ui-ux-pro-max/scripts/search.py \"gauge chart score data visualization dashboard\" --domain chart)"
+      "Bash(python .claude/skills/ui-ux-pro-max/scripts/search.py \"gauge chart score data visualization dashboard\" --domain chart)",
+      "WebFetch(domain:structai-production.up.railway.app)"
     ]
   }
 }
