@@ -22,7 +22,7 @@ AI-powered structural integrity analyzer for 3D models. Upload any `.stl` file a
 | Auth | Clerk |
 | 3D rendering | Three.js |
 | Backend | Flask, Gunicorn |
-| ML | scikit-learn (Random Forest), trained on synthetic mesh dataset |
+| ML | scikit-learn (Gradient Boosting), trained on synthetic mesh dataset |
 | Mesh processing | trimesh |
 | AI feedback | OpenAI API (gpt-4o-mini) |
 | Frontend hosting | Vercel |
@@ -191,7 +191,33 @@ A perfect sphere achieves the theoretical maximum:
 
 ### What the ML Model Adds
 
-The `GradientBoostingRegressor` (300 estimators, learning rate 0.05, max depth 4) is trained on ~700 synthetic meshes covering boxes, cylinders, spheres, cones, tori, capsules, and corrupted variants. Rather than applying the formula directly at inference time, the model learns non-linear interactions between features — for example, how SA/V ratio and aspect ratio together predict structural weakness in ways the formula alone doesn't fully capture. The final score is clipped to `[0.0, 1.0]`.
+The `GradientBoostingRegressor` (300 estimators, learning rate 0.05, max depth 4) is trained on **987 synthetic meshes** across six categories:
+
+| Category | Count | Purpose |
+|---|---|---|
+| Intact primitives | 622 | Boxes, cylinders, spheres, cones, tori, capsules |
+| Corrupted (face removal) | 120 | Non-watertight meshes with random holes |
+| Winding-inconsistent | 140 | Watertight meshes with 8–50% of faces flipped — the only source of `is_winding_consistent = 0` in the dataset |
+| Multi-component | 26 | Two or three separate primitives concatenated — Euler = 4 or 6 |
+| Open shells / extra tori | 79 | Capless cylinders, hemispheres, extended tori grid — varied Euler numbers and non-watertight topology |
+
+Rather than applying the formula directly at inference time, the model learns non-linear interactions between features — for example, how SA/V ratio and aspect ratio together predict structural weakness in ways the formula alone doesn't fully capture. The final score is clipped to `[0.0, 1.0]`.
+
+**Feature importances (from last training run):**
+
+| Feature | Importance |
+|---|---|
+| sphericity | 0.7336 |
+| is_watertight | 0.1817 |
+| aspect_ratio | 0.0602 |
+| volume | 0.0141 |
+| euler_number | 0.0036 |
+| is_winding_consistent | 0.0032 |
+| triangle_count | 0.0012 |
+| avg_edge_length | 0.0009 |
+| surface_area | 0.0007 |
+| sa_v_ratio | 0.0005 |
+| vertex_count | 0.0004 |
 
 ## Score Guide
 

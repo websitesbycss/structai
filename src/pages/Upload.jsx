@@ -250,21 +250,21 @@ function MeshStats({ result }) {
   return (
     <>
       <CollapsibleSection title="Mesh" defaultOpen>
-        <StatRow label="Triangles"    value={result.triangle_count.toLocaleString()} />
-        <StatRow label="Vertices"     value={result.vertex_count.toLocaleString()} />
-        <StatRow label="Surface area" value={`${result.surface_area.toLocaleString()} mm²`} />
+        <StatRow label="Triangles"         value={result.triangle_count.toLocaleString()} />
+        <StatRow label="Vertices"          value={result.vertex_count.toLocaleString()} />
+        <StatRow label="Surface area"      value={`${result.surface_area.toLocaleString(undefined, { maximumFractionDigits: 2 })} mm²`} />
         {result.volume != null && (
-          <StatRow label="Volume" value={`${result.volume.toLocaleString()} mm³`} />
+          <StatRow label="Volume" value={`${result.volume.toLocaleString(undefined, { maximumFractionDigits: 2 })} mm³`} />
         )}
-        <StatRow label="Avg edge" value={`${result.avg_edge_length} mm`} />
+        <StatRow label="Average Edge Length" value={`${result.avg_edge_length.toFixed(2)} mm`} />
       </CollapsibleSection>
 
       <CollapsibleSection title="Bounding Box" defaultOpen>
-        <StatRow label="X" value={`${bb.x} mm`} />
-        <StatRow label="Y" value={`${bb.y} mm`} />
-        <StatRow label="Z" value={`${bb.z} mm`} />
+        <StatRow label="X" value={`${bb.x.toFixed(2)} mm`} />
+        <StatRow label="Y" value={`${bb.y.toFixed(2)} mm`} />
+        <StatRow label="Z" value={`${bb.z.toFixed(2)} mm`} />
         {result.aspect_ratio != null && (
-          <StatRow label="Aspect ratio" value={`${result.aspect_ratio}:1`} />
+          <StatRow label="Aspect ratio" value={`${result.aspect_ratio.toFixed(2)}:1`} />
         )}
       </CollapsibleSection>
 
