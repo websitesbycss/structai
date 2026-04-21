@@ -50,7 +50,7 @@ def train():
         key=lambda x: x[1], reverse=True
     )
     for name, imp in importances:
-        bar = '█' * int(imp * 40)
+        bar = '#' * int(imp * 40)
         print(f"  {name:<25} {bar} {imp:.4f}")
 
 

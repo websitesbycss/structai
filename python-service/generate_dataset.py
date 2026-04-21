@@ -123,6 +123,110 @@ def make_corrupted(good_meshes, n=120):
     return corrupted
 
 
+def make_winding_inconsistent(good_meshes, n=140):
+    """
+    Create meshes with inconsistent face winding by flipping a random fraction
+    of faces. Winding is flipped by swapping the second and third vertex indices
+    of selected faces, reversing those face normals. process=False prevents
+    trimesh from auto-fixing the winding on load.
+    """
+    meshes = []
+    indices = rng.choice(len(good_meshes), size=n, replace=True)
+    for i in indices:
+        m = good_meshes[i].copy()
+        faces = m.faces.copy()
+        fraction = rng.uniform(0.08, 0.50)
+        n_flip = max(1, int(len(faces) * fraction))
+        flip_idx = rng.choice(len(faces), size=n_flip, replace=False)
+        # Swap columns 1 and 2 to reverse winding on selected faces
+        faces[flip_idx] = faces[flip_idx][:, [0, 2, 1]]
+        meshes.append(trimesh.Trimesh(vertices=m.vertices, faces=faces, process=False))
+    return meshes
+
+
+def _concatenate(mesh_list):
+    """Manually concatenate meshes so trimesh doesn't merge shared vertices."""
+    verts, faces = [], []
+    offset = 0
+    for m in mesh_list:
+        verts.append(m.vertices)
+        faces.append(m.faces + offset)
+        offset += len(m.vertices)
+    return trimesh.Trimesh(
+        vertices=np.vstack(verts),
+        faces=np.vstack(faces),
+        process=False,
+    )
+
+
+def make_multi_component(good_meshes):
+    """
+    Combine 2–3 separate watertight primitives into one mesh object.
+    Each closed component contributes +2 to the Euler number, so
+    two components → Euler=4, three → Euler=6.
+    Components are spread apart so they don't intersect.
+    """
+    meshes = []
+    primitives = [good_meshes[i] for i in rng.choice(len(good_meshes), size=60, replace=True)]
+
+    # Two-component meshes (Euler ≈ 4)
+    for k in range(0, 40, 2):
+        a = primitives[k].copy()
+        b = primitives[k + 1].copy()
+        gap = max(a.extents.max(), b.extents.max()) + 2.0
+        b.apply_translation([gap, 0, 0])
+        meshes.append(_concatenate([a, b]))
+
+    # Three-component meshes (Euler ≈ 6)
+    for k in range(0, 18, 3):
+        parts = [primitives[k + j].copy() for j in range(3)]
+        for j, p in enumerate(parts):
+            gap = p.extents.max() + 2.0
+            p.apply_translation([j * gap * 1.5, 0, 0])
+        meshes.append(_concatenate(parts))
+
+    return meshes
+
+
+def make_open_shells():
+    """
+    Meshes with open boundaries — no end caps on cylinders, or truncated
+    spheres. Non-watertight with varied Euler numbers (often 0 or 1).
+    """
+    meshes = []
+
+    # Open-ended cylinders: remove top and bottom cap faces by z-normal threshold
+    for r in [0.5, 1, 2, 4, 8]:
+        for h in [0.5, 1, 2, 5, 10, 20]:
+            cyl = trimesh.creation.cylinder(radius=r, height=h, sections=32)
+            normals = cyl.face_normals
+            side_mask = np.abs(normals[:, 2]) < 0.85
+            faces = cyl.faces[side_mask]
+            if len(faces) > 0:
+                meshes.append(trimesh.Trimesh(vertices=cyl.vertices, faces=faces, process=False))
+
+    # Hemispheres: keep only upper-half faces of a sphere
+    for subdiv in [2, 3]:
+        for r in [0.5, 1, 2, 5, 10]:
+            sphere = trimesh.creation.icosphere(subdivisions=subdiv, radius=r)
+            centers = sphere.vertices[sphere.faces].mean(axis=1)
+            upper = centers[:, 2] > 0
+            faces = sphere.faces[upper]
+            if len(faces) > 0:
+                meshes.append(trimesh.Trimesh(vertices=sphere.vertices, faces=faces, process=False))
+
+    # Expanded tori grid — euler_number = 0
+    for major in [1, 2, 3, 4, 6, 8, 12]:
+        for minor in [0.1, 0.3, 0.5, 0.8, 1.2, 2.0]:
+            if minor < major * 0.9:
+                try:
+                    meshes.append(trimesh.creation.torus(major_radius=major, minor_radius=minor))
+                except Exception:
+                    pass
+
+    return meshes
+
+
 # ── Build dataset ──────────────────────────────────────────────────────────
 
 def build_dataset():
@@ -135,10 +239,20 @@ def build_dataset():
         make_tori() +
         make_capsules()
     )
-    corrupted_meshes = make_corrupted(good_meshes)
-    all_meshes = good_meshes + corrupted_meshes
 
-    print(f"  {len(good_meshes)} intact shapes + {len(corrupted_meshes)} corrupted = {len(all_meshes)} total")
+    corrupted_meshes     = make_corrupted(good_meshes)
+    winding_bad_meshes   = make_winding_inconsistent(good_meshes)
+    multi_meshes         = make_multi_component(good_meshes)
+    open_shell_meshes    = make_open_shells()
+
+    all_meshes = good_meshes + corrupted_meshes + winding_bad_meshes + multi_meshes + open_shell_meshes
+
+    print(f"  {len(good_meshes)} intact")
+    print(f"  {len(corrupted_meshes)} corrupted (non-watertight)")
+    print(f"  {len(winding_bad_meshes)} winding-inconsistent")
+    print(f"  {len(multi_meshes)} multi-component")
+    print(f"  {len(open_shell_meshes)} open shells / extra tori")
+    print(f"  {len(all_meshes)} total")
 
     rows = []
     skipped = 0
@@ -154,9 +268,18 @@ def build_dataset():
 
     df = pd.DataFrame(rows)
     df.to_csv('dataset.csv', index=False)
-    print(f"Saved dataset.csv  ({len(df)} rows)")
+    print(f"\nSaved dataset.csv  ({len(df)} rows)")
 
-    # Score distribution summary
+    # Distribution summary
+    print("\nis_winding_consistent:")
+    print(df['is_winding_consistent'].value_counts().to_string())
+
+    print("\neuler_number (top values):")
+    print(df['euler_number'].value_counts().sort_index().to_string())
+
+    print("\nis_watertight:")
+    print(df['is_watertight'].value_counts().to_string())
+
     bins = [0, 0.2, 0.4, 0.6, 0.8, 1.01]
     labels = ['0.0–0.2', '0.2–0.4', '0.4–0.6', '0.6–0.8', '0.8–1.0']
     df['bucket'] = pd.cut(df['score'], bins=bins, labels=labels, right=False)
