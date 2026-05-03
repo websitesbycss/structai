@@ -15,6 +15,9 @@ dist-ssr
 # Local dev scripts (machine-specific paths)
 start-api.bat
 
+# Claude project context
+CLAUDE.md
+
 # Python service secrets
 python-service/.env
 
