@@ -1,0 +1,42 @@
+[
+  {
+    "trigger": "not_watertight",
+    "title": "Non-watertight mesh",
+    "content": "Non-watertight (open) meshes have boundary edges — edges shared by only one face, creating holes or gaps in the surface. This disqualifies the mesh from volumetric analysis, FDM 3D printing slicing, and finite element analysis. Common causes: missing faces from Boolean operations, open surfaces from CAD export errors, or split/duplicate vertices at seams. Fix by closing all open edge loops and merging boundary vertices."
+  },
+  {
+    "trigger": "high_aspect_ratio",
+    "title": "High aspect ratio",
+    "content": "An aspect ratio above 5:1 (max bounding-box extent divided by min extent) indicates thin rod or flat slab geometry. These shapes resist loads poorly in off-axis bending and are prone to warping during FDM printing. The penalty scales linearly up to aspect ratio 11, where it reaches its maximum of -0.25. Redesign towards a more isotropic cross-section, or add ribs perpendicular to the long axis to restore stiffness without extra mass."
+  },
+  {
+    "trigger": "low_sphericity",
+    "title": "Low sphericity / poor compactness",
+    "content": "Sphericity below 0.3 indicates a very unfavourable surface-area-to-volume ratio, typical of thin shells, flat plates, or highly elongated forms. Compact shapes (sphericity approaching 1.0) distribute stress more uniformly and are inherently stiffer per unit of material. Consider adding fillet radii to sharp re-entrant corners, increasing wall thickness in thin regions, or rounding out the overall envelope to improve the sphericity score."
+  },
+  {
+    "trigger": "inconsistent_winding",
+    "title": "Inconsistent face normals",
+    "content": "Faces with inverted winding cause rendering artifacts and break Boolean operations, FEA meshing, and slicing. The mesh appears inside-out in affected regions. This is typically caused by accidental mirror operations, manually flipped faces, or Boolean subtraction errors in CAD software. Fix by recalculating normals outward-consistently using your mesh editor's Recalculate Normals command or an automated repair tool."
+  },
+  {
+    "trigger": "euler_not_2",
+    "title": "Non-standard Euler characteristic",
+    "content": "A topologically valid, genus-0 closed surface has Euler characteristic V-E+F = 2. A value other than 2 signals topological defects: multiple disconnected shells (Euler = 4, 6, ...), a torus-like genus-1 topology (Euler = 0), or corrupted connectivity. Disconnected components must be analyzed separately or bridged with connecting geometry. Tori and other high-genus shapes will not receive the full +0.05 topology bonus."
+  },
+  {
+    "trigger": "high_sa_v_ratio",
+    "title": "High surface-area-to-volume ratio",
+    "content": "A high SA/V ratio signals thin-walled, hollow, or lattice-like geometry. While intentional for weight reduction, excessive thinness reduces effective stiffness and increases buckling susceptibility. For FDM printing, ensure minimum wall thickness is at least 1.2 mm (2 perimeters); for SLA/resin, 0.5 mm. Consider hollow infill with structural ribs, or use topology-optimised internal geometry to maintain stiffness with a lower SA/V ratio."
+  },
+  {
+    "trigger": "low_triangle_count",
+    "title": "Coarse mesh resolution",
+    "content": "A triangle count below 500 often indicates an overly coarse mesh that cannot capture geometric detail needed for accurate structural analysis. Curved surfaces approximated with too few triangles introduce faceting errors that affect stress concentration calculations at corners and fillets. For FEA import, aim for at least 10-20 triangles per radius of curvature. Re-export from CAD with a tighter chord-height tolerance."
+  },
+  {
+    "trigger": "near_perfect",
+    "title": "High integrity — fabrication considerations",
+    "content": "This mesh shows strong structural integrity. For FDM fabrication, verify the part orientation places maximum expected loads parallel to the print bed, since layer adhesion (Z direction) is the weakest axis. For CNC machining, confirm that all internal radii are larger than half the smallest end-mill diameter. For casting, check that draft angles are at least 1-3 degrees on all vertical walls to allow clean demoulding."
+  }
+]

@@ -7,10 +7,11 @@ const SCREEN = { UPLOAD: 'upload', ANALYZING: 'analyzing', RESULTS: 'results' }
 const API_URL = import.meta.env.VITE_API_URL
 
 const ANALYSIS_STEPS = [
-  { id: 'read',     label: 'Reading file',           detail: 'Parsing STL geometry data' },
-  { id: 'geometry', label: 'Extracting geometry',    detail: 'Computing mesh properties via trimesh' },
-  { id: 'ml',       label: 'Running ML model',       detail: 'Scoring structural integrity' },
-  { id: 'feedback', label: 'Generating AI feedback', detail: 'Synthesizing recommendations' },
+  { id: 'read',     label: 'Reading file',                detail: 'Parsing STL geometry data' },
+  { id: 'geometry', label: 'Extracting geometry',         detail: 'Computing mesh properties via trimesh' },
+  { id: 'ml',       label: 'Running ML model',            detail: 'Scoring structural integrity' },
+  { id: 'shap',     label: 'Computing SHAP explanations', detail: 'Calculating per-feature contributions' },
+  { id: 'feedback', label: 'Generating AI feedback',      detail: 'Retrieving guidelines and synthesizing recommendations' },
 ]
 
 // ── Icons ──────────────────────────────────────────────────────────────────
@@ -76,6 +77,40 @@ const RotateIcon = () => (
   </svg>
 )
 
+const ChartIcon = () => (
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="18" y1="20" x2="18" y2="10"/>
+    <line x1="12" y1="20" x2="12" y2="4"/>
+    <line x1="6" y1="20" x2="6" y2="14"/>
+  </svg>
+)
+
+const WrenchIcon = () => (
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+  </svg>
+)
+
+const DownloadIcon = () => (
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+    <polyline points="7 10 12 15 17 10"/>
+    <line x1="12" y1="15" x2="12" y2="3"/>
+  </svg>
+)
+
+const HeatmapIcon = () => (
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="10"/>
+    <path d="M8 12a4 4 0 0 1 8 0"/>
+    <line x1="12" y1="8" x2="12" y2="12"/>
+  </svg>
+)
+
 // ── Score Gauge SVG ────────────────────────────────────────────────────────
 function ScoreGauge({ score }) {
   const [animatedScore, setAnimatedScore] = useState(0)
@@ -88,9 +123,9 @@ function ScoreGauge({ score }) {
   const R = 82
   const cx = 100
   const cy = 104
-  const arcLen = Math.PI * R          // ≈ 257.6
+  const arcLen = Math.PI * R
   const filled = arcLen * animatedScore
-  const gap    = arcLen               // always leave full gap; dasharray fills from start
+  const gap    = arcLen
 
   const color  = score >= 0.7 ? 'var(--score-green)' : score >= 0.4 ? 'var(--score-yellow)' : 'var(--score-red)'
   const glow   = score >= 0.7 ? '#22c55e' : score >= 0.4 ? '#eab308' : '#ef4444'
@@ -124,65 +159,32 @@ function ScoreGauge({ score }) {
           </filter>
         </defs>
 
-        {/* Track (background arc) — sweep-flag=1 draws the UPPER semicircle in SVG y-down coords */}
         <path
           d={`M ${cx - R},${cy} A ${R},${R} 0 0,1 ${cx + R},${cy}`}
-          fill="none"
-          stroke="#1e2430"
-          strokeWidth="13"
-          strokeLinecap="round"
+          fill="none" stroke="#1e2430" strokeWidth="13" strokeLinecap="round"
           filter="url(#track-shadow)"
         />
-
-        {/* Glow halo */}
         <path
           d={`M ${cx - R},${cy} A ${R},${R} 0 0,1 ${cx + R},${cy}`}
-          fill="none"
-          stroke={glow}
-          strokeWidth="18"
-          strokeLinecap="round"
-          strokeDasharray={`${filled} ${gap}`}
-          opacity="0.18"
+          fill="none" stroke={glow} strokeWidth="18" strokeLinecap="round"
+          strokeDasharray={`${filled} ${gap}`} opacity="0.18"
+          style={{ transition: `stroke-dasharray 1.5s cubic-bezier(0.34,1.2,0.64,1)` }}
+        />
+        <path
+          d={`M ${cx - R},${cy} A ${R},${R} 0 0,1 ${cx + R},${cy}`}
+          fill="none" stroke={glow} strokeWidth="11" strokeLinecap="round"
+          strokeDasharray={`${filled} ${gap}`} filter="url(#gauge-glow)"
           style={{ transition: `stroke-dasharray 1.5s cubic-bezier(0.34,1.2,0.64,1)` }}
         />
 
-        {/* Score arc */}
-        <path
-          d={`M ${cx - R},${cy} A ${R},${R} 0 0,1 ${cx + R},${cy}`}
-          fill="none"
-          stroke={glow}
-          strokeWidth="11"
-          strokeLinecap="round"
-          strokeDasharray={`${filled} ${gap}`}
-          filter="url(#gauge-glow)"
-          style={{ transition: `stroke-dasharray 1.5s cubic-bezier(0.34,1.2,0.64,1)` }}
-        />
-
-        {/* Score number */}
-        <text
-          x={cx} y={cy - 22}
-          textAnchor="middle"
-          fill="#f0f4ff"
-          fontSize="38"
-          fontWeight="800"
-          fontFamily="'Fira Code', monospace"
-          letterSpacing="-1"
-        >
+        <text x={cx} y={cy - 22} textAnchor="middle" fill="#f0f4ff"
+          fontSize="38" fontWeight="800" fontFamily="'Fira Code', monospace" letterSpacing="-1">
           {scoreDisplay}
         </text>
-        <text
-          x={cx} y={cy - 5}
-          textAnchor="middle"
-          fill="#3e4a63"
-          fontSize="11"
-          fontFamily="inherit"
-          fontWeight="600"
-          letterSpacing="1"
-        >
+        <text x={cx} y={cy - 5} textAnchor="middle" fill="#3e4a63"
+          fontSize="11" fontFamily="inherit" fontWeight="600" letterSpacing="1">
           / 100
         </text>
-
-        {/* Range ticks */}
         <text x={cx - R + 1} y={cy + 15} fill="#3e4a63" fontSize="9" textAnchor="middle" fontFamily="inherit">0</text>
         <text x={cx + R - 1} y={cy + 15} fill="#3e4a63" fontSize="9" textAnchor="middle" fontFamily="inherit">100</text>
       </svg>
@@ -190,27 +192,143 @@ function ScoreGauge({ score }) {
       <div className="gauge-label" style={{ color }}>{label}</div>
       <p className="gauge-desc">{desc}</p>
 
-      {/* Score band indicator */}
       <div className="gauge-bands">
         <div className={`gauge-band gauge-band--red ${score < 0.4 ? 'gauge-band--active' : ''}`}>
-          <span className="gauge-band-dot" />
-          <span>0–39 Weak</span>
+          <span className="gauge-band-dot" /><span>0–39 Weak</span>
         </div>
         <div className={`gauge-band gauge-band--yellow ${score >= 0.4 && score < 0.7 ? 'gauge-band--active' : ''}`}>
-          <span className="gauge-band-dot" />
-          <span>40–69 Moderate</span>
+          <span className="gauge-band-dot" /><span>40–69 Moderate</span>
         </div>
         <div className={`gauge-band gauge-band--green ${score >= 0.7 ? 'gauge-band--active' : ''}`}>
-          <span className="gauge-band-dot" />
-          <span>70–100 Strong</span>
+          <span className="gauge-band-dot" /><span>70–100 Strong</span>
         </div>
       </div>
     </div>
   )
 }
 
+// ── SHAP chart ─────────────────────────────────────────────────────────────
+const FEATURE_LABELS = {
+  sphericity:            'Sphericity',
+  is_watertight:         'Watertight',
+  aspect_ratio:          'Aspect Ratio',
+  volume:                'Volume',
+  euler_number:          'Euler Number',
+  is_winding_consistent: 'Normal Consistency',
+  triangle_count:        'Triangle Count',
+  avg_edge_length:       'Avg Edge Length',
+  surface_area:          'Surface Area',
+  sa_v_ratio:            'SA/V Ratio',
+  vertex_count:          'Vertex Count',
+}
+
+function ShapChart({ shapValues }) {
+  const [ready, setReady] = useState(false)
+  useEffect(() => {
+    const t = setTimeout(() => setReady(true), 80)
+    return () => clearTimeout(t)
+  }, [])
+
+  const entries = Object.entries(shapValues)
+    .map(([feat, val]) => ({ feat, val }))
+    .sort((a, b) => Math.abs(b.val) - Math.abs(a.val))
+    .slice(0, 8)
+
+  const maxAbs = Math.max(...entries.map(e => Math.abs(e.val)), 0.0001)
+
+  return (
+    <div className="shap-chart">
+      {entries.map(({ feat, val }) => {
+        const pct   = (Math.abs(val) / maxAbs) * 100
+        const isPos = val >= 0
+        return (
+          <div key={feat} className="shap-row">
+            <span className="shap-label">{FEATURE_LABELS[feat] ?? feat}</span>
+            <div className="shap-bar-track">
+              <div
+                className={`shap-bar ${isPos ? 'shap-bar--pos' : 'shap-bar--neg'}`}
+                style={{ width: ready ? `${pct}%` : '0%' }}
+              />
+            </div>
+            <span className={`shap-val ${isPos ? 'shap-val--pos' : 'shap-val--neg'}`}>
+              {isPos ? '+' : ''}{val.toFixed(3)}
+            </span>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+// ── Repair results ─────────────────────────────────────────────────────────
+function RepairResults({ result, originalFileName }) {
+  function downloadStl() {
+    const bytes    = Uint8Array.from(atob(result.repaired_stl_b64), c => c.charCodeAt(0))
+    const blob     = new Blob([bytes], { type: 'application/octet-stream' })
+    const url      = URL.createObjectURL(blob)
+    const a        = document.createElement('a')
+    a.href         = url
+    const base     = originalFileName ? originalFileName.replace(/\.stl$/i, '') : 'mesh'
+    a.download     = `${base}_repaired.stl`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const scoreDiff  = result.repaired_score - result.original_score
+  const isImproved = scoreDiff > 0.005
+  const isWorse    = scoreDiff < -0.005
+  const noChanges  = result.repairs_applied.length === 1 &&
+    result.repairs_applied[0].toLowerCase().includes('no significant issues')
+
+  return (
+    <div className="repair-results">
+      <div className="repair-score-row">
+        <div className="repair-score-item">
+          <span className="repair-score-label">Before</span>
+          <span className="repair-score-val repair-score-val--before">
+            {Math.round(result.original_score * 100)}
+          </span>
+        </div>
+        <span className="repair-arrow">→</span>
+        <div className="repair-score-item">
+          <span className="repair-score-label">After</span>
+          <span className={`repair-score-val ${isImproved ? 'repair-score-val--improved' : isWorse ? 'repair-score-val--worse' : 'repair-score-val--same'}`}>
+            {Math.round(result.repaired_score * 100)}
+          </span>
+        </div>
+        {isImproved && (
+          <span className="repair-delta repair-delta--pos">+{Math.round(scoreDiff * 100)} pts</span>
+        )}
+        {isWorse && (
+          <span className="repair-delta repair-delta--neg">{Math.round(scoreDiff * 100)} pts</span>
+        )}
+      </div>
+
+      {result.repair_summary && (
+        <p className="repair-summary">{result.repair_summary}</p>
+      )}
+
+      <div className="repair-log">
+        {result.repairs_applied.map((r, i) => (
+          <div key={i} className="repair-log-item">
+            <CheckIcon />
+            <span>{r}</span>
+          </div>
+        ))}
+      </div>
+
+      {!noChanges && (
+        <button className="repair-download" onClick={downloadStl}>
+          <DownloadIcon />
+          Download Repaired STL
+        </button>
+      )}
+    </div>
+  )
+}
+
 // ── Analysis panel (right) ─────────────────────────────────────────────────
-function AnalysisPanel({ result }) {
+function AnalysisPanel({ result, repairState, repairResult, repairError, onRepair, fileName }) {
   return (
     <aside className="results-analysis">
       {/* Score */}
@@ -222,7 +340,19 @@ function AnalysisPanel({ result }) {
         <ScoreGauge score={result.score} />
       </div>
 
-      {/* AI Feedback */}
+      {/* SHAP Score Breakdown */}
+      {result.shap_values && (
+        <div className="analysis-block">
+          <div className="analysis-block-header">
+            <ChartIcon />
+            Score Breakdown
+          </div>
+          <p className="shap-subtitle">Feature contributions to this score</p>
+          <ShapChart shapValues={result.shap_values} />
+        </div>
+      )}
+
+      {/* AI Feedback (RAG-enhanced) */}
       {result.feedback && (
         <div className="analysis-block analysis-block--feedback">
           <div className="analysis-block-header">
@@ -240,6 +370,42 @@ function AnalysisPanel({ result }) {
           </div>
         </div>
       )}
+
+      {/* Mesh Repair Agent (demo) */}
+      <div className="analysis-block repair-demo">
+        <div className="analysis-block-header">
+          <WrenchIcon />
+          Mesh Repair Agent
+          <span className="demo-badge">Demo</span>
+        </div>
+
+        {repairState === 'idle' && (
+          <>
+            <p className="repair-desc">
+              An AI agent applies targeted fixes (winding correction, hole filling, and removal
+              of degenerate faces) then re-scores your mesh.
+            </p>
+            <button className="repair-btn" onClick={onRepair}>
+              Run Repair
+            </button>
+          </>
+        )}
+
+        {repairState === 'loading' && (
+          <div className="repair-loading">
+            <div className="spinner-sm" />
+            <span>Agent is repairing mesh…</span>
+          </div>
+        )}
+
+        {repairState === 'done' && repairResult && (
+          <RepairResults result={repairResult} originalFileName={fileName} />
+        )}
+
+        {repairState === 'error' && (
+          <p className="repair-error">{repairError ?? 'Repair failed. Please try again.'}</p>
+        )}
+      </div>
     </aside>
   )
 }
@@ -250,11 +416,11 @@ function MeshStats({ result }) {
   return (
     <>
       <CollapsibleSection title="Mesh" defaultOpen>
-        <StatRow label="Triangles"         value={result.triangle_count.toLocaleString()} />
-        <StatRow label="Vertices"          value={result.vertex_count.toLocaleString()} />
-        <StatRow label="Surface area"      value={`${result.surface_area.toLocaleString(undefined, { maximumFractionDigits: 2 })} mm²`} />
+        <StatRow label="Triangles"          value={result.triangle_count.toLocaleString()} />
+        <StatRow label="Vertices"           value={result.vertex_count.toLocaleString()} />
+        <StatRow label="Surface area"       value={`${result.surface_area.toLocaleString(undefined, { maximumFractionDigits: 2 })} mm²`} />
         {result.volume != null && (
-          <StatRow label="Volume" value={`${result.volume.toLocaleString(undefined, { maximumFractionDigits: 2 })} mm³`} />
+          <StatRow label="Volume"           value={`${result.volume.toLocaleString(undefined, { maximumFractionDigits: 2 })} mm³`} />
         )}
         <StatRow label="Average Edge Length" value={`${result.avg_edge_length.toFixed(2)} mm`} />
       </CollapsibleSection>
@@ -323,13 +489,18 @@ function StatRow({ label, value, badge }) {
 
 // ── Main Upload component ──────────────────────────────────────────────────
 export default function Upload() {
-  const [screen, setScreen]         = useState(SCREEN.UPLOAD)
-  const [file, setFile]             = useState(null)
-  const [isDragging, setIsDragging] = useState(false)
-  const [result, setResult]         = useState(null)
-  const [apiError, setApiError]     = useState(null)
+  const [screen,      setScreen]      = useState(SCREEN.UPLOAD)
+  const [file,        setFile]        = useState(null)
+  const [isDragging,  setIsDragging]  = useState(false)
+  const [result,      setResult]      = useState(null)
+  const [apiError,    setApiError]    = useState(null)
   const [analysisStep, setAnalysisStep] = useState(0)
-  const fileInputRef = useRef(null)
+  const [heatmapMode, setHeatmapMode] = useState(false)
+  const [hasHeatmap,  setHasHeatmap]  = useState(false)
+  const [repairState, setRepairState] = useState('idle')  // idle|loading|done|error
+  const [repairResult, setRepairResult] = useState(null)
+  const [repairError, setRepairError] = useState(null)
+  const fileInputRef  = useRef(null)
   const stepTimersRef = useRef([])
 
   function clearStepTimers() {
@@ -348,17 +519,20 @@ export default function Upload() {
     setResult(null)
     setApiError(null)
     setAnalysisStep(0)
+    setHeatmapMode(false)
+    setHasHeatmap(false)
+    setRepairState('idle')
+    setRepairResult(null)
     setScreen(SCREEN.ANALYZING)
 
-    // Stagger step progression for UX
     clearStepTimers()
-    const delays = [0, 700, 1500, 2200]
+    const delays = [0, 700, 1500, 2200, 2900]
     delays.forEach((delay, i) => {
       const t = setTimeout(() => setAnalysisStep(i), delay)
       stepTimersRef.current.push(t)
     })
 
-    const MIN_DISPLAY_MS = 2800
+    const MIN_DISPLAY_MS = 3400
     const start = Date.now()
 
     try {
@@ -380,9 +554,32 @@ export default function Upload() {
       await new Promise(r => setTimeout(r, MIN_DISPLAY_MS - elapsed))
     }
 
-    setAnalysisStep(ANALYSIS_STEPS.length) // mark all complete
+    setAnalysisStep(ANALYSIS_STEPS.length)
     await new Promise(r => setTimeout(r, 350))
     setScreen(SCREEN.RESULTS)
+  }
+
+  async function handleRepair() {
+    if (!file) return
+    setRepairState('loading')
+    setRepairResult(null)
+    setRepairError(null)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      const res  = await fetch(`${API_URL}/repair`, { method: 'POST', body: formData })
+      const data = await res.json()
+      if (!res.ok) {
+        setRepairError(data.error ?? 'Repair failed.')
+        setRepairState('error')
+      } else {
+        setRepairResult(data)
+        setRepairState('done')
+      }
+    } catch {
+      setRepairError('Could not reach the repair server.')
+      setRepairState('error')
+    }
   }
 
   function handleInputChange(e) { handleFile(e.target.files[0]) }
@@ -393,11 +590,7 @@ export default function Upload() {
     handleFile(e.dataTransfer.files[0])
   }, [])
 
-  const handleDragOver = useCallback((e) => {
-    e.preventDefault()
-    setIsDragging(true)
-  }, [])
-
+  const handleDragOver  = useCallback((e) => { e.preventDefault(); setIsDragging(true) }, [])
   const handleDragLeave = useCallback(() => setIsDragging(false), [])
 
   function handleNewFile() {
@@ -406,6 +599,11 @@ export default function Upload() {
     setFile(null)
     setResult(null)
     setApiError(null)
+    setHeatmapMode(false)
+    setHasHeatmap(false)
+    setRepairState('idle')
+    setRepairResult(null)
+    setRepairError(null)
     if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
@@ -529,15 +727,52 @@ export default function Upload() {
                 </div>
               )}
             </div>
+
+            {/* Heatmap toggle */}
+            {hasHeatmap && (
+              <button
+                className={`heatmap-toggle ${heatmapMode ? 'heatmap-toggle--active' : ''}`}
+                onClick={() => setHeatmapMode(m => !m)}
+                title="Toggle defect heatmap visualization"
+              >
+                <HeatmapIcon />
+                Defect Heatmap
+                <span className="beta-badge">Beta</span>
+              </button>
+            )}
+
+            {/* Heatmap legend */}
+            {heatmapMode && hasHeatmap && (
+              <div className="heatmap-legend">
+                <span className="heatmap-legend-item heatmap-legend-item--good">Good</span>
+                <span className="heatmap-legend-item heatmap-legend-item--warn">Caution</span>
+                <span className="heatmap-legend-item heatmap-legend-item--bad">Defect</span>
+              </div>
+            )}
+
             <div className="results-360-badge" aria-hidden="true">
               <RotateIcon />
               <span>Drag to<br/>rotate</span>
             </div>
-            <STLViewer file={file} />
+
+            <STLViewer
+              file={file}
+              heatmapMode={heatmapMode}
+              onHeatmapReady={setHasHeatmap}
+            />
           </main>
 
-          {/* ── Right: Score + Feedback ── */}
-          {result && <AnalysisPanel result={result} />}
+          {/* ── Right: Score + SHAP + Feedback + Repair ── */}
+          {result && (
+            <AnalysisPanel
+              result={result}
+              repairState={repairState}
+              repairResult={repairResult}
+              repairError={repairError}
+              onRepair={handleRepair}
+              fileName={file?.name}
+            />
+          )}
         </div>
       </div>
     )

@@ -258,8 +258,8 @@ export default function Home() {
               <h3>How It Works</h3>
               <p>
                 Your 3D model is processed by our backend using trimesh, a Python library for
-                3D mesh analysis. We extract key metrics — volume, surface area, triangle count,
-                normal consistency, and more — and feed them into a custom machine learning model.
+                3D mesh analysis. We extract key metrics (volume, surface area, triangle count,
+                normal consistency, and more) and feed them into a custom machine learning model.
               </p>
             </div>
             <div className="about-card">
@@ -276,7 +276,7 @@ export default function Home() {
               <h3>AI Feedback</h3>
               <p>
                 Beyond the score, StructAI uses a large language model to generate natural-language
-                feedback about your design — highlighting specific strengths, weaknesses, and
+                feedback about your design, highlighting specific strengths, weaknesses, and
                 recommendations for improvement.
               </p>
             </div>

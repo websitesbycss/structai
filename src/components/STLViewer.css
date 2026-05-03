@@ -31,3 +31,16 @@
   font-size: 15px;
   color: var(--score-red);
 }
+
+.stl-spinner {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  animation: stl-spin 0.9s linear infinite;
+}
+
+@keyframes stl-spin {
+  to { transform: rotate(360deg); }
+}
