@@ -22,6 +22,14 @@ const CheckIcon = () => (
   </svg>
 )
 
+const XIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    strokeWidth="2.5" strokeLinecap="round">
+    <line x1="18" y1="6" x2="6" y2="18"/>
+    <line x1="6" y1="6" x2="18" y2="18"/>
+  </svg>
+)
+
 const UploadCloudIcon = () => (
   <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor"
     strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round">
@@ -108,6 +116,15 @@ const HeatmapIcon = () => (
     <circle cx="12" cy="12" r="10"/>
     <path d="M8 12a4 4 0 0 1 8 0"/>
     <line x1="12" y1="8" x2="12" y2="12"/>
+  </svg>
+)
+
+const UploadSmallIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="16 16 12 12 8 16"/>
+    <line x1="12" y1="12" x2="12" y2="21"/>
+    <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
   </svg>
 )
 
@@ -328,9 +345,20 @@ function RepairResults({ result, originalFileName }) {
 }
 
 // ── Analysis panel (right) ─────────────────────────────────────────────────
-function AnalysisPanel({ result, repairState, repairResult, repairError, onRepair, fileName }) {
+function AnalysisPanel({ result, repairState, repairResult, repairError, onRepair, fileName, mobileOpen, onMobileClose }) {
   return (
-    <aside className="results-analysis">
+    <aside className={`results-analysis ${mobileOpen ? 'results-analysis--mobile-open' : ''}`}>
+      {/* Mobile-only header */}
+      <div className="results-panel-mobile-header">
+        <div className="results-panel-mobile-title">
+          <ScoreIcon />
+          Analysis Results
+        </div>
+        <button className="results-mobile-close" onClick={onMobileClose} aria-label="Close panel">
+          <XIcon />
+        </button>
+      </div>
+
       {/* Score */}
       <div className="analysis-block">
         <div className="analysis-block-header">
@@ -371,12 +399,12 @@ function AnalysisPanel({ result, repairState, repairResult, repairError, onRepai
         </div>
       )}
 
-      {/* Mesh Repair Agent (demo) */}
+      {/* Mesh Repair Agent */}
       <div className="analysis-block repair-demo">
         <div className="analysis-block-header">
           <WrenchIcon />
           Mesh Repair Agent
-          <span className="demo-badge">Demo</span>
+          <span className="beta-badge">Beta</span>
         </div>
 
         {repairState === 'idle' && (
@@ -497,11 +525,16 @@ export default function Upload() {
   const [analysisStep, setAnalysisStep] = useState(0)
   const [heatmapMode, setHeatmapMode] = useState(false)
   const [hasHeatmap,  setHasHeatmap]  = useState(false)
-  const [repairState, setRepairState] = useState('idle')  // idle|loading|done|error
+  const [repairState, setRepairState] = useState('idle')
   const [repairResult, setRepairResult] = useState(null)
   const [repairError, setRepairError] = useState(null)
+  const [mobilePanel, setMobilePanel] = useState(null) // null | 'properties' | 'analysis'
   const fileInputRef  = useRef(null)
   const stepTimersRef = useRef([])
+
+  useEffect(() => {
+    fetch(`${API_URL}/health`).catch(() => {})
+  }, [])
 
   function clearStepTimers() {
     stepTimersRef.current.forEach(clearTimeout)
@@ -523,6 +556,7 @@ export default function Upload() {
     setHasHeatmap(false)
     setRepairState('idle')
     setRepairResult(null)
+    setMobilePanel(null)
     setScreen(SCREEN.ANALYZING)
 
     clearStepTimers()
@@ -604,6 +638,7 @@ export default function Upload() {
     setRepairState('idle')
     setRepairResult(null)
     setRepairError(null)
+    setMobilePanel(null)
     if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
@@ -674,10 +709,13 @@ export default function Upload() {
         <div className="results-layout">
 
           {/* ── Left: Mesh stats ── */}
-          <aside className="results-sidebar">
+          <aside className={`results-sidebar ${mobilePanel === 'properties' ? 'results-sidebar--mobile-open' : ''}`}>
             <div className="results-sidebar-header">
               <MeshIcon />
               Mesh Properties
+              <button className="results-mobile-close" onClick={() => setMobilePanel(null)} aria-label="Close panel">
+                <XIcon />
+              </button>
             </div>
             <div className="results-sidebar-body">
               {apiError ? (
@@ -728,6 +766,22 @@ export default function Upload() {
               )}
             </div>
 
+            {/* Mobile floating panel buttons */}
+            <div className="mobile-viewer-controls">
+              <button className="mobile-panel-btn mobile-panel-btn--props" onClick={() => setMobilePanel('properties')}>
+                <MeshIcon />
+                Properties
+              </button>
+              {result && (
+                <button className="mobile-panel-btn mobile-panel-btn--analysis" onClick={() => setMobilePanel('analysis')}>
+                  Details
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="9 18 15 12 9 6"/>
+                  </svg>
+                </button>
+              )}
+            </div>
+
             {/* Heatmap toggle */}
             {hasHeatmap && (
               <button
@@ -771,9 +825,17 @@ export default function Upload() {
               repairError={repairError}
               onRepair={handleRepair}
               fileName={file?.name}
+              mobileOpen={mobilePanel === 'analysis'}
+              onMobileClose={() => setMobilePanel(null)}
             />
           )}
         </div>
+
+        {/* Mobile: fixed bottom bar — always visible */}
+        <button className="results-mobile-footer-btn" onClick={handleNewFile}>
+          <UploadSmallIcon />
+          Analyze New File
+        </button>
       </div>
     )
   }

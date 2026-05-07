@@ -1,8 +1,10 @@
 .auth-page {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  height: 100dvh;
+  height: 100vh;
   background: var(--bg);
+  overflow: hidden;
 }
 
 .auth-body {
@@ -11,6 +13,8 @@
   align-items: center;
   justify-content: center;
   padding: 40px 24px;
+  overflow-y: auto;
+  min-height: 0;
 }
 
 .auth-card {
@@ -179,4 +183,22 @@
 .auth-submit:disabled:hover {
   background: transparent;
   color: var(--text-primary);
+}
+
+/* ── Mobile ── */
+@media (max-width: 640px) {
+  .auth-body {
+    padding: 16px;
+    align-items: flex-start;
+    padding-top: 24px;
+  }
+
+  .auth-card {
+    padding: 28px 22px;
+  }
+
+  .auth-title {
+    font-size: 22px;
+    margin-bottom: 22px;
+  }
 }

@@ -10,6 +10,7 @@ export default function Navbar() {
   const navigate = useNavigate()
   const location = useLocation()
   const [dropdownOpen, setDropdownOpen] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
   const dropdownRef = useRef(null)
 
   useEffect(() => {
@@ -22,16 +23,23 @@ export default function Navbar() {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
+  useEffect(() => {
+    setMenuOpen(false)
+  }, [location.pathname])
+
+  useEffect(() => {
+    document.body.style.overflow = menuOpen ? 'hidden' : ''
+    return () => { document.body.style.overflow = '' }
+  }, [menuOpen])
+
   function handleUploadClick() {
-    if (isSignedIn) {
-      navigate('/upload')
-    } else {
-      navigate('/auth')
-    }
+    setMenuOpen(false)
+    navigate(isSignedIn ? '/upload' : '/auth')
   }
 
   function handleAboutClick(e) {
     e.preventDefault()
+    setMenuOpen(false)
     if (location.pathname === '/') {
       document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' })
     } else {
@@ -41,58 +49,155 @@ export default function Navbar() {
 
   async function handleLogOut() {
     setDropdownOpen(false)
+    setMenuOpen(false)
     await signOut()
     navigate('/')
   }
 
-  // Avatar: profile image, or first letter of name/email, or generic icon
   const avatarLetter = user?.firstName?.[0]
     ?? user?.primaryEmailAddress?.emailAddress?.[0]?.toUpperCase()
     ?? '?'
 
   const avatarImage = user?.imageUrl
-
   const displayEmail = user?.primaryEmailAddress?.emailAddress ?? ''
 
   return (
-    <nav className="navbar">
-      <Link to="/" className="navbar-brand">
-        <img src={logo} alt="StructAI logo" className="navbar-logo" />
-        <span className="navbar-name">
-          <span className="navbar-struct">Struct</span>
-          <span className="navbar-ai">AI</span>
-        </span>
-      </Link>
+    <>
+      <nav className="navbar">
+        <Link to="/" className="navbar-brand" onClick={() => setMenuOpen(false)}>
+          <img src={logo} alt="StructAI logo" className="navbar-logo" />
+          <span className="navbar-name">
+            <span className="navbar-struct">Struct</span>
+            <span className="navbar-ai">AI</span>
+          </span>
+        </Link>
 
-      <div className="navbar-links">
-        <button className="navbar-link" onClick={handleUploadClick}>Upload</button>
-        <a href="#about" className="navbar-link" onClick={handleAboutClick}>About</a>
+        {/* Desktop links */}
+        <div className="navbar-links">
+          <button className="navbar-link" onClick={handleUploadClick}>Upload</button>
+          <a href="#about" className="navbar-link" onClick={handleAboutClick}>About</a>
 
-        {isLoaded && isSignedIn ? (
-          <div className="navbar-avatar-wrap" ref={dropdownRef}>
-            <button
-              className="navbar-avatar"
-              onClick={() => setDropdownOpen(v => !v)}
-              aria-label="Profile menu"
-            >
-              {avatarImage
-                ? <img src={avatarImage} alt="avatar" className="navbar-avatar-img" />
-                : avatarLetter
-              }
-            </button>
-            {dropdownOpen && (
-              <div className="navbar-dropdown">
-                <div className="navbar-dropdown-email">{displayEmail}</div>
-                <button className="navbar-dropdown-item" onClick={handleLogOut}>
-                  Log out
-                </button>
+          {isLoaded && isSignedIn ? (
+            <div className="navbar-avatar-wrap" ref={dropdownRef}>
+              <button
+                className="navbar-avatar"
+                onClick={() => setDropdownOpen(v => !v)}
+                aria-label="Profile menu"
+              >
+                {avatarImage
+                  ? <img src={avatarImage} alt="avatar" className="navbar-avatar-img" />
+                  : avatarLetter
+                }
+              </button>
+              {dropdownOpen && (
+                <div className="navbar-dropdown">
+                  <div className="navbar-dropdown-email">{displayEmail}</div>
+                  <button className="navbar-dropdown-item" onClick={handleLogOut}>
+                    Log out
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <Link to="/auth" className="navbar-btn">Sign Up →</Link>
+          )}
+        </div>
+
+        {/* Mobile hamburger */}
+        <button
+          className="navbar-hamburger"
+          onClick={() => setMenuOpen(v => !v)}
+          aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+          aria-expanded={menuOpen}
+        >
+          {menuOpen ? (
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          ) : (
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+              <line x1="3" y1="6" x2="21" y2="6"/>
+              <line x1="3" y1="12" x2="21" y2="12"/>
+              <line x1="3" y1="18" x2="21" y2="18"/>
+            </svg>
+          )}
+        </button>
+      </nav>
+
+      {/* Mobile overlay backdrop */}
+      <div
+        className={`navbar-mobile-overlay ${menuOpen ? 'navbar-mobile-overlay--open' : ''}`}
+        onClick={() => setMenuOpen(false)}
+        aria-hidden="true"
+      />
+
+      {/* Mobile drawer */}
+      <div className={`navbar-mobile-menu ${menuOpen ? 'navbar-mobile-menu--open' : ''}`} aria-hidden={!menuOpen}>
+        <div className="navbar-mobile-top">
+          <Link to="/" className="navbar-brand" onClick={() => setMenuOpen(false)}>
+            <img src={logo} alt="StructAI logo" className="navbar-logo" />
+            <span className="navbar-name">
+              <span className="navbar-struct">Struct</span>
+              <span className="navbar-ai">AI</span>
+            </span>
+          </Link>
+          <button className="navbar-mobile-close-btn" onClick={() => setMenuOpen(false)} aria-label="Close menu">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+
+        <nav className="navbar-mobile-nav">
+          <button className="navbar-mobile-link" onClick={handleUploadClick}>
+            <span className="navbar-mobile-link-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="16 16 12 12 8 16"/>
+                <line x1="12" y1="12" x2="12" y2="21"/>
+                <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
+              </svg>
+            </span>
+            Upload
+          </button>
+          <a href="#about" className="navbar-mobile-link" onClick={handleAboutClick}>
+            <span className="navbar-mobile-link-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+            </span>
+            About
+          </a>
+        </nav>
+
+        <div className="navbar-mobile-footer">
+          {isLoaded && isSignedIn ? (
+            <>
+              <div className="navbar-mobile-user">
+                {avatarImage
+                  ? <img src={avatarImage} alt="avatar" className="navbar-mobile-user-img" />
+                  : <div className="navbar-mobile-user-letter">{avatarLetter}</div>
+                }
+                <span className="navbar-mobile-user-email">{displayEmail}</span>
               </div>
-            )}
-          </div>
-        ) : (
-          <Link to="/auth" className="navbar-btn">Sign Up →</Link>
-        )}
+              <button className="navbar-mobile-signout" onClick={handleLogOut}>
+                Log out
+              </button>
+            </>
+          ) : (
+            <Link to="/auth" className="navbar-mobile-signup" onClick={() => setMenuOpen(false)}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+              Sign Up
+            </Link>
+          )}
+        </div>
       </div>
-    </nav>
+    </>
   )
 }
