@@ -182,11 +182,13 @@
   backdrop-filter: blur(3px);
   z-index: 149;
   opacity: 0;
+  pointer-events: none;
   transition: opacity 0.25s ease;
 }
 
 .navbar-mobile-overlay--open {
   opacity: 1;
+  pointer-events: all;
 }
 
 /* Slide-in drawer from right */
