@@ -1,9 +1,9 @@
 /* ── Shared page shell ─────────────────────────────────────────────────── */
 .upload-page {
+  position: fixed;
+  inset: 0;
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  height: 100svh;
   overflow: hidden;
   background: var(--bg);
 }
