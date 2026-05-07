@@ -123,9 +123,15 @@ const ViewerIcon = () => (
 )
 
 // ── Page component ─────────────────────────────────────────────────────────
+const API_URL = import.meta.env.VITE_API_URL
+
 export default function Home() {
   const navigate    = useNavigate()
   const { isSignedIn } = useUser()
+
+  useEffect(() => {
+    fetch(`${API_URL}/health`).catch(() => {})
+  }, [])
 
   useEffect(() => {
     if (window.location.hash === '#about') {

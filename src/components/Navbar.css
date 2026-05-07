@@ -156,21 +156,18 @@
   display: none;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   background: none;
-  border: 1px solid var(--border);
-  border-radius: 8px;
+  border: none;
   color: var(--text-secondary);
   cursor: pointer;
-  transition: border-color 0.15s, color 0.15s, background 0.15s;
+  transition: color 0.15s;
   flex-shrink: 0;
 }
 
 .navbar-hamburger:hover {
-  border-color: var(--border-hover);
   color: var(--text-primary);
-  background: var(--bg-elevated);
 }
 
 /* Backdrop overlay */
@@ -198,8 +195,8 @@
   top: 0;
   right: 0;
   width: min(300px, 82vw);
-  height: 100dvh;
   height: 100vh;
+  height: 100svh;
   background: var(--bg-surface);
   border-left: 1px solid var(--border);
   box-shadow: -12px 0 48px rgba(0, 0, 0, 0.5);
@@ -228,18 +225,17 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   background: none;
-  border: 1px solid var(--border);
-  border-radius: 8px;
+  border: none;
   color: var(--text-muted);
   cursor: pointer;
-  transition: border-color 0.15s, color 0.15s;
+  transition: color 0.15s;
+  flex-shrink: 0;
 }
 
 .navbar-mobile-close-btn:hover {
-  border-color: var(--border-hover);
   color: var(--text-primary);
 }
 

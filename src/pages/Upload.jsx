@@ -769,8 +769,10 @@ export default function Upload() {
             {/* Mobile floating panel buttons */}
             <div className="mobile-viewer-controls">
               <button className="mobile-panel-btn mobile-panel-btn--props" onClick={() => setMobilePanel('properties')}>
-                <MeshIcon />
                 Properties
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="9 18 15 12 9 6"/>
+                </svg>
               </button>
               {result && (
                 <button className="mobile-panel-btn mobile-panel-btn--analysis" onClick={() => setMobilePanel('analysis')}>
