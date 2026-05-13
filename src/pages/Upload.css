@@ -512,9 +512,15 @@
   flex-direction: column;
   background: var(--bg-surface);
   border-left: 1px solid var(--border);
-  overflow-y: auto;
+  overflow: hidden;
   min-height: 0;
   gap: 0;
+}
+
+.results-analysis-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .analysis-block {
@@ -1153,6 +1159,7 @@
     min-height: 0;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
   }
 
   /* Hide desktop "Analyze New File" in sidebar on mobile */
@@ -1201,21 +1208,20 @@
     border-left: none;
     display: flex;
     flex-direction: column;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
+    overflow: hidden;
   }
 
   .results-analysis--mobile-open {
     transform: translateX(0);
   }
 
-  /* Ensure all analysis content blocks are visible (not clipped) */
-  .analysis-block {
-    flex-shrink: 0;
-  }
-
-  .analysis-block--feedback {
-    flex: 0 0 auto;
+  /* Scroll wrapper inside the panel — reliable iOS scroll */
+  .results-analysis-body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: scroll;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
   }
 
   /* Panel mobile header with title + close */
@@ -1246,7 +1252,7 @@
     align-items: center;
     justify-content: space-between;
     position: absolute;
-    top: 48px;
+    top: 60px;
     left: 16px;
     right: 16px;
     z-index: 3;
@@ -1258,10 +1264,10 @@
     align-items: center;
     gap: 5px;
     padding: 6px 12px;
-    background: rgba(15, 17, 23, 0.88);
-    border: 1px solid var(--border);
+    background: rgba(15, 17, 23, 0.90);
+    border: 1px solid var(--border-hover);
     border-radius: 8px;
-    color: var(--text-secondary);
+    color: var(--text-primary);
     font-size: 11px;
     font-weight: 600;
     cursor: pointer;
@@ -1271,20 +1277,19 @@
   }
 
   .mobile-panel-btn:active {
-    border-color: var(--border-hover);
-    color: var(--text-primary);
-    background: rgba(15, 17, 23, 0.95);
+    background: rgba(15, 17, 23, 0.98);
+    border-color: var(--text-muted);
   }
 
   .mobile-panel-btn--analysis {
-    color: var(--accent);
-    border-color: var(--accent-glow);
-    background: rgba(34, 211, 238, 0.08);
+    color: var(--text-primary);
+    border-color: var(--border-hover);
+    background: rgba(15, 17, 23, 0.90);
   }
 
   .mobile-panel-btn--analysis:active {
-    background: rgba(34, 211, 238, 0.14);
-    border-color: var(--accent);
+    background: rgba(15, 17, 23, 0.98);
+    border-color: var(--text-muted);
   }
 
   /* Fixed bottom "Analyze New File" bar */
@@ -1314,17 +1319,17 @@
     color: var(--text-primary);
   }
 
-  /* Heatmap + rotate badge: sit above the footer */
+  /* Heatmap + rotate badge: 16px above footer (mirrors topbar's 16px from top) */
   .heatmap-toggle {
-    bottom: 72px;
+    bottom: 16px;
   }
 
   .heatmap-legend {
-    bottom: 112px;
+    bottom: 52px;
   }
 
   .results-360-badge {
-    bottom: 72px;
+    bottom: 16px;
   }
 
   /* Topbar needs pointer events on mobile so buttons work */

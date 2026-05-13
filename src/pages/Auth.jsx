@@ -1,10 +1,19 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useSignUp, useSignIn, useClerk } from '@clerk/clerk-react'
 import Navbar from '../components/Navbar'
 import './Auth.css'
 
 export default function Auth() {
+  useEffect(() => {
+    document.body.style.overflow = 'hidden'
+    document.documentElement.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = ''
+      document.documentElement.style.overflow = ''
+    }
+  }, [])
+
   const [mode, setMode] = useState('signup') // 'signup' | 'login'
   const [step, setStep] = useState('form')   // 'form' | 'verify'
   const [email, setEmail] = useState('')
